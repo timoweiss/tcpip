@@ -124,12 +124,12 @@ class TCP(object):
     # TCP Header und Payload aus binärem TCP Paket
     def unpack(self, packet):
         cflags = {  # Control flags
-            32: "U",
-            16: "A",
-            8: "P",
-            4: "R",
-            2: "S",
-            1: "F"}
+            32: "U",  # URG: Urgent Pointer field is significant
+            16: "A",  # ACK: Acknowledgment packet
+            8: "P",  # PSH: Informs TCP that data should be sent immediately (Useful in real-time applications)
+            4: "R",  # RST: Request to reset connection
+            2: "S",  # SYN: Request to establish a connection
+            1: "F"}  # FIN: Request to interrupt (close) a connection
         _tcp = layer()
         _tcp.thl = ((packet[12]) >> 4) * 4
         _tcp.options = packet[20:_tcp.thl]
