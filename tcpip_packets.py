@@ -24,7 +24,7 @@ class IP(object):
         self.source = socket.inet_aton(source)
         self.destination = socket.inet_aton(destination)
 
-    # liefert IP-Header zum Übertragen im UDP Socket (oder auf RAW Sockets)
+    # liefert IP-Header zum uebertragen im UDP Socket (oder auf RAW Sockets)
     def pack(self):
         ver_ihl = (self.version << 4) + self.ihl
         flags_offset = (self.flags << 13) + self.offset
@@ -104,7 +104,7 @@ class TCP(object):
         self.urgp = 0
         self.payload = ""
 
-    # binäres TCP-Pakte erstellen
+    # binaeres TCP-Pakte erstellen
     def pack(self):
         data_offset = (self.offset << 4) + 0
         flags = self.fin + (self.syn << 1) + (self.rst << 2) + \
@@ -121,7 +121,7 @@ class TCP(object):
                                  self.urgp)
         return tcp_header
 
-    # TCP Header und Payload aus binärem TCP Paket
+    # TCP Header und Payload aus binaerem TCP Paket
     def unpack(self, packet):
         cflags = {  # Control flags
             32: "U",
