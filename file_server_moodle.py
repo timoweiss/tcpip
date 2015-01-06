@@ -67,27 +67,43 @@ class TCP_Connection(object):
 
     # function to establish connection, exit after entering ESTABLISHED state
     def wait_syn(self):
+        print("wait_syn")
+        while(goon):
+            try:
+                data, adr = s.recvfrom(2048)
+                print(self.pr())
+                print(data.decode("utf-8"))
+            except socket.timeout:
+                print(data)
+                pass
+
+
         pass    # TODO: Schritt 1
 
     # receive and acknowledge a request
     def wait_request(self):
+        print("wait_request")
         pass    # TODO: Schritt 2
 
     # send the data, main function
     def send_data(self):
+        print("send_data")
         pass    # TODO: Schritt 2+4, Aufgabe 4
 
     # function to execute closing procedure
     def close(self):
+        print("close")
         pass    # TODO: Schritt 3
 
     # generate a packet (header#payload),
     # payload should be the repeated segment number
     def gen_data(self):
+        print("gen_data")
         pass    # TODO: Schritt 2
 
     # send an ack: recommended to send all ACK using this function
     def send_ack(self):
+        print("send_ack")
         pass    # TODO: Schritt 1-3, Aufgabe 4
 
         # this should be used to generate packets
