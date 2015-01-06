@@ -84,7 +84,7 @@ class TCP_Connection(object):
     # generate a packet (header#payload),
     # payload should be the repeated segment number
     def gen_data(self):
-        pass:   # TODO: Schritt 2
+        pass    # TODO: Schritt 2
 
     # send an ack: recommended to send all ACK using this function
     def send_ack(self):
