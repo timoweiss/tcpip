@@ -55,7 +55,7 @@ class TCP_Connection(object):
         print('Connection established, waiting for request ...')
         if not self.wait_request():
             return False
-        print('Request for', self.num_segments, ' received')
+        print('Request for', 'TODO:self.num_segments', ' received')
         print('Sending data...')
         if not self.send_data():
             return False
@@ -84,11 +84,15 @@ class TCP_Connection(object):
     # receive and acknowledge a request
     def wait_request(self):
         print("wait_request")
+        data, adr = s.recvfrom(2048)
+        print(data.decode("utf-8"))
+        return True
         pass    # TODO: Schritt 2
 
     # send the data, main function
     def send_data(self):
         print("send_data")
+        s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
         pass    # TODO: Schritt 2+4, Aufgabe 4
 
     # function to execute closing procedure
