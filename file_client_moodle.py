@@ -67,10 +67,16 @@ class TCP_Connection(object):
 
     # establish TCP connection
     def connect(self):
-        print("connect")
-        for i in range(5):
-            s.sendto("tcpo.pack()".encode("utf-8"), (dst_ip, dst_port))
-            print("asd")
+        #print("connect: send syn, wait for syn-ack")
+        s.sendto("syn".encode("utf-8"), (dst_ip, dst_port))
+        while(goon):
+            print("waiting for server")
+            try:
+                data, adr = s.recvfrom(2048)
+                print(data.decode("utf-8"))
+                return True
+            except Exception as e:
+                pass
         pass    # TODO: Schritt 1
 
     # send the request containing the number of segments
