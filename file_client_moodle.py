@@ -79,13 +79,23 @@ class TCP_Connection(object):
                 pass
         pass    # TODO: Schritt 1
 
+
+    def wait_ack(self):
+        data, adr = s.recvfrom(2048)
+        print(data.decode("utf-8"))
+        return True
+
+        return True
     # send the request containing the number of segments
     def send_request(self):
-        payload = struct.pack('i', self.num_segments)
-        pass    # TODO: Schritt 2
+        #payload = struct.pack('i', self.num_segments)
+        s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
+        return True
+        # TODO: Schritt 2
 
     # function to receive data
     def receive_data(self):
+        return True
         while goon:
             packet = self.rec_packet()
             if packet != []:
