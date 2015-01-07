@@ -67,12 +67,13 @@ class TCP_Connection(object):
 
     # function to establish connection, exit after entering ESTABLISHED state
     def wait_syn(self):
-        print("wait_syn")
+        print("wait for client:")
         while(goon):
             try:
                 data, adr = s.recvfrom(2048)
-                print(self.pr())
                 print(data.decode("utf-8"))
+                s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
+                return True
             except socket.timeout:
                 print(data)
                 pass
