@@ -67,11 +67,17 @@ class TCP_Connection(object):
 
     # function to establish connection, exit after entering ESTABLISHED state
     def wait_syn(self):
-        print("wait for client:")
         while(goon):
             try:
                 data, adr = s.recvfrom(2048)
-                print(data.decode("utf-8"))
+                recvPacket = self.segment.unpack(data)
+                if(recvPacket.syn):
+                    newpacket = self.segment.gen_packet(321, recvPacket.seq+1, 1, 0, 1, None)
+                    recvPacket.ack = 1
+                    s.sendto(newpacket, (dst_ip, dst_port))
+                    return True
+                print(self.segment.get_info(data))
+
                 s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
                 return True
             except socket.timeout:
@@ -85,7 +91,7 @@ class TCP_Connection(object):
     def wait_request(self):
         print("wait_request")
         data, adr = s.recvfrom(2048)
-        print(data.decode("utf-8"))
+        print(data)
         return True
         pass    # TODO: Schritt 2
 
