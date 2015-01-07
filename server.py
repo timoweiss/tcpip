@@ -69,19 +69,22 @@ class TCP_Connection(object):
     def wait_syn(self):
         while(goon):
             try:
-                data, adr = s.recvfrom(2048)
-                recvPacket = self.segment.unpack(data)
-                if(recvPacket.syn):
-                    newpacket = self.segment.gen_packet(321, recvPacket.seq+1, 1, 0, 1, None)
-                    recvPacket.ack = 1
-                    s.sendto(newpacket, (dst_ip, dst_port))
+                data = receive_segment(10)
+                # data, adr = s.recvfrom(2048)
+                if not data:
+                    return False
+                packet = self.segment.unpack(data)
+                if(packet.syn):
+                    newpacket = self.segment.gen_packet(321, packet.seq+1, 1, 0, 1, None)
+                    send_segment(newpacket, self.segment.get_info(newpacket))
                     return True
+
+                #print("data", data)
                 print(self.segment.get_info(data))
 
-                s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
+                #s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
                 return True
             except socket.timeout:
-                print(data)
                 pass
 
 
@@ -89,22 +92,33 @@ class TCP_Connection(object):
 
     # receive and acknowledge a request
     def wait_request(self):
-        print("wait_request")
-        data, adr = s.recvfrom(2048)
-        print(data)
-        return True
-        pass    # TODO: Schritt 2
+
+        data = receive_segment(3)
+        packet = self.segment.unpack(data)
+        info = self.segment.get_info(data)
+        #print_packet(data, ipo.id, self.segment.get_info(data))
+
+        if(info[2] and info[4] or True): # TODO or True
+            newpacket = self.segment.gen_packet(321, 1, 1, 0, 1, None)
+            send_segment(newpacket, self.segment.get_info(newpacket))
+            return True
+        else:
+            print('hmm')
+            return False
 
     # send the data, main function
     def send_data(self):
-        print("send_data")
-        s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
-        pass    # TODO: Schritt 2+4, Aufgabe 4
+        newpacket = self.segment.gen_packet(321, 1, 1, 0, 1, None)
+        send_segment(newpacket, self.segment.get_info(newpacket))
+
+        return True
+
 
     # function to execute closing procedure
     def close(self):
-        print("close")
-        pass    # TODO: Schritt 3
+        data = receive_segment(3)
+        packet = self.segment.unpack(data)
+        return True
 
     # generate a packet (header#payload),
     # payload should be the repeated segment number
@@ -162,8 +176,8 @@ def receive_segment(rto):
         return
     # extract information from TCP Packet
     # packet[20:]:packet without 20 Bytes IP header
-    info = self.segment.get_info(packet[20:])
-    print_packet('IN: ', ipo.id, info)
+    #info = ipo.segment.get_info(packet[20:])
+    #print_packet('IN: ', ipo.id, info)
     # return TCP packet
     return packet[20:]
 
@@ -218,8 +232,8 @@ my_port = 6000
 dst_port = 5000
 my_ip = '127.0.0.1'
 dst_ip = '127.0.0.1'
-my_v_ip = '141.37.168.2'
-dst_v_ip = '141.37.168.1'
+my_v_ip = '141.37.168.1'
+dst_v_ip = '141.37.168.2'
 my_v_port = 100
 # sollte nach Empfang des SYN-Pakets gesetzt werden, spielt hier aber
 # keine Rolle

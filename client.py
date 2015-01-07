@@ -9,6 +9,7 @@ from threading import Thread
 from threading import Event
 from operator import itemgetter
 from tcpip_packets import *
+import os
 
 
 # TCP Verbindung
@@ -67,48 +68,52 @@ class TCP_Connection(object):
 
     # establish TCP connection
     def connect(self):
-        #print("connect: send syn, wait for syn-ack")
-        pakt = tcpo.gen_packet(123, 0, 1, 0, 0, None)
-        s.sendto(pakt, (dst_ip, dst_port))
+        # build syn
+        packet = tcpo.gen_packet(seqn=123, ackn=0, syn=1, fin=0, ack=0, payload=gen_payload())
+        # send syn
+        self.send_packet(packet)
+        # wait for response
+        #packet = receive_segment(3)
 
-        while(goon):
-            print("waiting for server")
-            try:
-                data, adr = s.recvfrom(2048)
-                print(tcpo.get_info(data))
-                return True
-            except Exception as e:
-                pass
-        pass    # TODO: Schritt 1
+        return True
 
 
     def wait_ack(self):
-        data, adr = s.recvfrom(2048)
-        print(tcpo.get_info(data))
-        return True
+        packet = receive_segment(3)
+        if packet != []:
+            data = self.segment.unpack(packet)
+            if(data.ack):
+                return True
+            else:
+                return False
 
-        return True
     # send the request containing the number of segments
     def send_request(self):
-        #payload = struct.pack('i', self.num_segments)
-        s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
+        payload = struct.pack('i', self.num_segments)
+        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=0, ack=0, payload=payload)
+        send_segment(packet, self.segment.get_info(packet))
+        #s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
         return True
         # TODO: Schritt 2
 
     # function to receive data
     def receive_data(self):
-        return True
         while goon:
-            packet = self.rec_packet()
+            packet = receive_segment(5)
             if packet != []:
                 seqn, ackn, syn, ack, payload, fin = self.segment.get_info(
                     packet)
-            pass    # TODO: Schritt 2+4, Aufgabe 4
+                data = self.segment.unpack(packet)
+                #print(data.payload)
+                # TODO errorhandling
+            return True
         return False
 
     # function to execute closing procedure
     def close(self):
-        pass    # TODO: Schritt 3
+        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=1, ack=0, payload=gen_payload())
+        send_segment(packet, self.segment.get_info(packet))
+        return True
 
     # send an ack: recommended to send all ACK using this function
     def send_ack(self):
@@ -155,8 +160,9 @@ def receive_segment(rto):
         return
     # extract information from TCP Packet
     # packet[20:]:packet without 20 Bytes IP header
-    info = self.segment.get_info(packet[20:])
-    print_packet('IN: ', ipo.id, info)
+    # TODO: self ist nicht definiert
+    #info = self.segment.get_info(packet[20:])
+    #print_packet('IN: ', ipo.id, info)
     # return TCP packet
     return packet[20:]
 
@@ -204,6 +210,8 @@ def my_file_client():
         print('Failed')
     goon = False
 
+def gen_payload():
+    return os.urandom(1000)
 # global data
 goon = True               # Threads stop if goon==0
 
