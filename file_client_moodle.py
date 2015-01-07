@@ -68,12 +68,14 @@ class TCP_Connection(object):
     # establish TCP connection
     def connect(self):
         #print("connect: send syn, wait for syn-ack")
-        s.sendto("syn".encode("utf-8"), (dst_ip, dst_port))
+        pakt = tcpo.gen_packet(123, 0, 1, 0, 0, None)
+        s.sendto(pakt, (dst_ip, dst_port))
+
         while(goon):
             print("waiting for server")
             try:
                 data, adr = s.recvfrom(2048)
-                print(data.decode("utf-8"))
+                print(tcpo.get_info(data))
                 return True
             except Exception as e:
                 pass
@@ -82,7 +84,7 @@ class TCP_Connection(object):
 
     def wait_ack(self):
         data, adr = s.recvfrom(2048)
-        print(data.decode("utf-8"))
+        print(tcpo.get_info(data))
         return True
 
         return True
