@@ -169,8 +169,11 @@ class TCP(object):
         self.syn = syn
         self.ack = ack
         self.fin = fin
-        self.payload = payload
-        return self.pack() + payload
+        if(payload):
+            self.payload = payload
+            return self.pack() + payload
+        else:
+            return self.pack()
 
     # wesentliche Info zu einem Paket
     def get_info(self, packet):
