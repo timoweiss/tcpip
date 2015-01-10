@@ -4,6 +4,7 @@ import sys
 import time
 import struct
 import math
+import helper
 from threading import Thread
 from threading import Event
 from operator import itemgetter
@@ -171,6 +172,7 @@ def receive_segment(rto):
         return []
     # extract header fields from binary packet
     iph = ipo.unpack(packet)
+    print(helper.print_in_msg(packet, ipo.id))
     if iph.dst != my_v_ip:
         print('Error: IP packet not addressed to me', iph.dst)
         return
@@ -185,6 +187,7 @@ def receive_segment(rto):
 # this function sends packets on the UDP socket
 # Funktion kann unverändert verwendet werden
 def send_segment(packet, info):
+    time.sleep(2)
     print_packet('OUT:', ipo.id, info)
     # create IP header
     iph = ipo.pack()
@@ -220,7 +223,6 @@ def my_file_server():
     conn = TCP_Connection(my_v_port, dst_v_port)
     ok = conn.listen()
     goon = False
-
 
 # global data
 goon = True               # Threads stop if goon==0
