@@ -76,14 +76,11 @@ class TCP_Connection(object):
                     return False
                 packet = self.segment.unpack(data)
 
-                print("if packet.syn")
-                print(packet.isACK)
                 if(packet.syn and not packet.isACK):
                     newpacket = self.segment.gen_packet(seqn=self.tx_next, ackn=packet.seq+1, syn=1, fin=0, ack=1, payload=packet.payload)
                     send_segment(newpacket, self.segment.get_info(newpacket))
                     return True
 
-                #print("data", data)
                 print(self.segment.get_info(data))
 
                 #s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
