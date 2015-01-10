@@ -73,7 +73,7 @@ class TCP_Connection(object):
         # send syn
         self.send_packet(packet)
         # wait for response
-        #packet = receive_segment(3)
+        packet = receive_segment(3)
 
         return True
 
