@@ -42,8 +42,8 @@ def get_packet_info(packet):
     _tcp.syn = _tcp.flags.find("S") != -1
     _tcp.isACK = _tcp.flags.find("A") != -1
     _tcp.fin = _tcp.flags.find("F") != -1
-    return (_tcp.seq, _tcp.ack, _tcp.syn, _tcp.isACK, len(_tcp.payload), _tcp.fin)
+    return _tcp
 
 def print_in_msg(packet, ipo_id):
-    package_info = get_packet_info(packet)
-    print('IN:', ipo_id, package_info)
+    pi = get_packet_info(packet)
+    print('IN:', 'seqn:', pi.seq, 'ackn:', pi.ack, 'syn:', pi.syn, 'fin:', pi.fin, 'ack:', pi.isACK)
