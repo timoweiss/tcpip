@@ -70,7 +70,7 @@ class TCP_Connection(object):
     # establish TCP connection
     def connect(self):
         # build syn
-        packet = tcpo.gen_packet(seqn=123, ackn=0, syn=1, fin=0, ack=0, payload=gen_payload())
+        packet = tcpo.gen_packet(seqn=self.tx_next, ackn=0, syn=1, fin=0, ack=0, payload=gen_payload())
         # send syn
         self.send_packet(packet)
         # wait for response
