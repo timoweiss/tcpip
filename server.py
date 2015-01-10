@@ -175,7 +175,8 @@ def receive_segment(rto):
         return []
     # extract header fields from binary packet
     iph = ipo.unpack(packet)
-    print(helper.print_in_msg(packet, ipo.id))
+
+    helper.print_in_msg(packet, ipo.id, 'IN:')
     if iph.dst != my_v_ip:
         print('Error: IP packet not addressed to me', iph.dst)
         return
@@ -192,6 +193,7 @@ def receive_segment(rto):
 def send_segment(packet, info):
     time.sleep(2)
     print_packet('OUT:', ipo.id, info)
+    helper.print_in_msg(packet, ipo.id, 'OUT2:')
     # create IP header
     iph = ipo.pack()
     # add IP header
