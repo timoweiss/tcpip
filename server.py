@@ -189,7 +189,7 @@ def receive_segment(rto):
 # Funktion kann unverändert verwendet werden
 def send_segment(packet, info):
     time.sleep(2)
-    print_packet('OUT:', ipo.id, info)
+    #print_packet('OUT:', ipo.id, info)
     helper.print_in_msg(packet, ipo.id, 'OUT2:')
     # create IP header
     iph = ipo.pack()
