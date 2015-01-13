@@ -70,7 +70,7 @@ class TCP_Connection(object):
     # establish TCP connection
     def connect(self):
         # build syn
-        packet = tcpo.gen_packet(seqn=self.tx_next, ackn=0, syn=1, fin=0, ack=0, payload=gen_payload())
+        packet = tcpo.gen_packet(seqn=self.tx_next, ackn=0, syn=1, fin=0, ack=0, payload=b'')
         # send syn
         self.send_packet(packet)
         # wait for response
@@ -90,9 +90,10 @@ class TCP_Connection(object):
 
     # send the request containing the number of segments
     def send_request(self):
-        payload = struct.pack('i', self.num_segments)
+        #payload = struct.pack('i', self.num_segments)
+        payload = b''
         packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=0, ack=0, payload=payload)
-        send_segment(packet, self.segment.get_info(packet))
+        self.send_packet(packet)
         #s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
         return True
         # TODO: Schritt 2
@@ -112,8 +113,8 @@ class TCP_Connection(object):
 
     # function to execute closing procedure
     def close(self):
-        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=1, ack=0, payload=gen_payload())
-        send_segment(packet, self.segment.get_info(packet))
+        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=1, ack=0, payload=b'')
+        self.send_packet(packet)
         return True
 
     # send an ack: recommended to send all ACK using this function
@@ -125,7 +126,7 @@ class TCP_Connection(object):
         # packet to be sent
         packet = self.segment.gen_packet(seqn, ackn, syn, fin, ack, payload)
         # this function should be used to put them on the UDP socket
-        send_segment(packet, self.segment.get_info(packet))
+        self.send_packet(packet)
 
     # implement a function to trigger retransmits
     # function should return false in number of retransmissions is exceeded
@@ -173,7 +174,7 @@ def receive_segment(rto):
 # Funktion kann unverändert verwendet werden
 def send_segment(packet, info):
     time.sleep(2)
-    print_packet('OUT:', ipo.id, info)
+    #print_packet('OUT:', ipo.id, info)
     helper.print_in_msg(packet, ipo.id, 'OUT2:')
     # create IP header
     iph = ipo.pack()
