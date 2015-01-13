@@ -1,4 +1,13 @@
 import struct
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class layer():
     pass
@@ -16,7 +25,8 @@ def get_packet_info(packet):
     _tcp.thl = ((packet[12]) >> 4) * 4
     _tcp.options = packet[20:_tcp.thl]
     _tcp.payload = packet[_tcp.thl:]
-    tcph = struct.unpack("!HHLLBBHHH", packet[:20])
+    tcph = struct.unpack("!HHLLBBHHH", packet[:20]) # H = 2 byte, L = 4 byte, B = 1 byte
+    # 2,2,4,4,1,1,2,2,2
     _tcp.srcp = tcph[0]  # source port
     _tcp.dstp = tcph[1]  # destination port
     _tcp.seq = tcph[2]  # sequence number
@@ -46,4 +56,7 @@ def get_packet_info(packet):
 
 def print_in_msg(packet, ipo_id, type_io):
     pi = get_packet_info(packet)
-    print(type_io, 'seqn:', pi.seq, 'ackn:', pi.ack, 'syn:', pi.syn, 'fin:', pi.fin, 'ack:', pi.isACK)
+    color = bcolors.OKBLUE
+    if(type_io == 'IN:'):
+        color = bcolors.OKGREEN
+    print(color, type_io, '\t', 'seqn:', pi.seq, 'ackn:', pi.ack, 'syn:', pi.syn, 'fin:', pi.fin, 'ack:', pi.isACK, 'payload:', pi.payload, bcolors.ENDC)
