@@ -109,25 +109,44 @@ class TCP_Connection(object):
             send_segment(packet, self.segment.get_info(packet))
             return True
         else:
-            print('hmm')
             return False
 
     # send the data, main function
     def send_data(self):
-        payload = gen_data()
-        packet = self.segment.gen_packet(self.seq,ackn=self.ackn,payload=payload)
-        info = self.segment.get_info(packet)
-        helper.print_info(info, 'OUT:')
-        send_segment(packet, self.segment.get_info(packet))
+        for x in range(0, self.num_segments):
+            payload = self.gen_data()
+            self.seq += 1
+            packet=self.segment.gen_packet(self.seq,ackn=self.ackn,payload=payload)
+            self.send_packet(packet)
+            self.wait_ack()
+        #payload = gen_data()
+        #packet = self.segment.gen_packet(self.seq,ackn=self.ackn,payload=payload)
+        #info = self.segment.get_info(packet)
+        #helper.print_info(info, 'OUT:')
+        #send_segment(packet, self.segment.get_info(packet))
 
         return True
 
+    def wait_ack(self):
+        #get new packet
+        packet = receive_segment(3)
+        info = self.segment.get_info(packet)
+        #remove first segment in list
+        self.segments_in_flight.pop(0)
+        self.seq = info[0]
+        self.ackn = info[1]
+        # this function should be used to put them on the UDP socket
+        return True
 
     # function to execute closing procedure
     def close(self):
         packet = receive_segment(3)
         info = self.segment.get_info(packet)
         helper.print_info(info, 'IN:')
+        if(info[5]):
+
+            packet=self.segment.gen_packet(self.seq,ackn=self.ackn, fin=1, ack=1)
+            self.send_packet(packet)
         return True
 
     # generate a packet (header#payload),

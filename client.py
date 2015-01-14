@@ -102,6 +102,7 @@ class TCP_Connection(object):
 
         payload = struct.pack('i', self.num_segments)
         #payload = b''
+        #seqn=self.tx_next,payload=payload,ackn=self.rx_max+1
         packet = tcpo.gen_packet(seqn=self.seq, ackn=self.ackn, payload=payload)
         info = self.segment.get_info(packet)
         helper.print_info(info, 'OUT:')
@@ -142,10 +143,19 @@ class TCP_Connection(object):
 
     # function to execute closing procedure
     def close(self):
-        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=1, ack=0, payload=b'')
+        packet = tcpo.gen_packet(self.seq,fin=1,ackn=self.ackn)
         info = self.segment.get_info(packet)
         helper.print_info(info, 'OUT:')
         self.send_packet(packet)
+        packet = receive_segment(5)
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'IN:')
+        if(info[5]):
+            packet = tcpo.gen_packet(self.seq, ack=1,ackn=self.ackn)
+            info = self.segment.get_info(packet)
+            helper.print_info(info, 'OUT:')
+            self.send_packet(packet)
+
         return True
 
     # send an ack: recommended to send all ACK using this function
