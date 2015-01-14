@@ -29,6 +29,9 @@ class TCP_Connection(object):
         self.tx_max = -1          # maximum byte sent ever
         self.segments_in_flight = []  # segments in flight
         # list of (info, segment) tupels
+        # save seq and ackn
+        self.seq=0
+        self.ackn=0
 
         self.cwnd = 1             # congestion window
         self.rwnd = 8             # receive window
@@ -69,39 +72,65 @@ class TCP_Connection(object):
 
     # establish TCP connection
     def connect(self):
+        self.seq=0
+        self.ackn=0
         # build syn
-        packet = tcpo.gen_packet(seqn=self.tx_next, ackn=0, syn=1, fin=0, ack=0, payload=b'')
+        packet = tcpo.gen_packet(seqn=0, syn=1)
         # send syn
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'syn OUT:')
         self.send_packet(packet)
+
         # wait for response
         packet = receive_segment(3)
-
-        return True
-
-
-    def wait_ack(self):
-        packet = receive_segment(3)
-        if packet != []:
-            data = self.segment.unpack(packet)
-            if(data.ack):
-                return True
-            else:
-                return False
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'syn ack IN:')
+        # syn ack
+        # seqn = 0, ackn = my_seqn+1
+        if(info == (0, 1, True, True, 0, False)):
+            packet = tcpo.gen_packet(seqn=1,ackn=1, ack=1)
+            info = self.segment.get_info(packet)
+            helper.print_info(info, 'ack OUT:')
+            self.send_packet(packet)
+            return True
+        return False
 
     # send the request containing the number of segments
     def send_request(self):
-        #payload = struct.pack('i', self.num_segments)
-        payload = b''
-        packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=0, ack=0, payload=payload)
+        # increment sequence number
+        self.seq += 1
+
+        payload = struct.pack('i', self.num_segments)
+        #payload = b''
+        packet = tcpo.gen_packet(seqn=self.seq, ackn=self.ackn, payload=payload)
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'OUT:')
         self.send_packet(packet)
-        #s.sendto("ack".encode("utf-8"), (dst_ip, dst_port))
+
         return True
-        # TODO: Schritt 2
+
+    def wait_ack(self):
+        packet = receive_segment(3)
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'IN:')
+
+        self.seq = info[0] + 1
+        self.ackn = info[1]
+        # ack
+        if(info[3]):
+            packet=self.segment.gen_packet(self.seq,ackn=self.ackn,ack=1)
+            self.send_packet(packet)
+            self.segments_in_flight.pop(0)
+            return True
+        return
+
 
     # function to receive data
     def receive_data(self):
         while goon:
             packet = receive_segment(5)
+            info = self.segment.get_info(packet)
+            helper.print_info(info, 'IN:')
             if packet != []:
                 seqn, ackn, syn, ack, payload, fin = self.segment.get_info(
                     packet)
@@ -114,6 +143,8 @@ class TCP_Connection(object):
     # function to execute closing procedure
     def close(self):
         packet = tcpo.gen_packet(seqn=123, ackn=123, syn=0, fin=1, ack=0, payload=b'')
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'OUT:')
         self.send_packet(packet)
         return True
 
@@ -126,6 +157,8 @@ class TCP_Connection(object):
         # packet to be sent
         packet = self.segment.gen_packet(seqn, ackn, syn, fin, ack, payload)
         # this function should be used to put them on the UDP socket
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'OUT:')
         self.send_packet(packet)
 
     # implement a function to trigger retransmits
@@ -157,7 +190,7 @@ def receive_segment(rto):
         return []
     # extract header fields from binary packet
     iph = ipo.unpack(packet)
-    helper.print_in_msg(packet, ipo.id, 'IN:')
+    #helper.print_in_msg(packet, ipo.id, 'IN:')
     if iph.dst != my_v_ip:
         print('Error: IP packet not addressed to me', iph.dst)
         return
@@ -175,7 +208,7 @@ def receive_segment(rto):
 def send_segment(packet, info):
     time.sleep(2)
     #print_packet('OUT:', ipo.id, info)
-    helper.print_in_msg(packet, ipo.id, 'OUT2:')
+    #helper.print_in_msg(packet, ipo.id, 'OUT2:')
     # create IP header
     iph = ipo.pack()
     # add IP header

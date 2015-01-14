@@ -60,3 +60,9 @@ def print_in_msg(packet, ipo_id, type_io):
     if(type_io == 'IN:'):
         color = bcolors.OKGREEN
     print(color, type_io, '\t', 'seqn:', pi.seq, 'ackn:', pi.ack, 'syn:', pi.syn, 'fin:', pi.fin, 'ack:', pi.isACK, 'payload:', pi.payload, bcolors.ENDC)
+
+def print_info(info, type_io):
+    color = bcolors.FAIL
+    if('IN:' in type_io):
+        color = bcolors.OKGREEN
+    print(color, type_io, '\t', 'seqn:', info[0], 'ackn:', info[1], 'syn:', info[2], 'fin:', info[5], 'ack:', info[3], 'payload:', info[4], bcolors.ENDC)

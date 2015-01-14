@@ -10,6 +10,8 @@ from threading import Event
 from operator import itemgetter
 from tcpip_packets import *
 
+import os
+
 
 # TCP Verbindung
 class TCP_Connection(object):
@@ -27,6 +29,9 @@ class TCP_Connection(object):
         self.tx_max = -1          # maximum byte sent ever
         self.segments_in_flight = []  # segments in flight
         # list of (info, segment) tupels
+        # save seq and ackn
+        self.seq=0
+        self.ackn=0
 
         self.cwnd = 1             # congestion window
         self.rwnd = 8             # receive window
@@ -56,7 +61,7 @@ class TCP_Connection(object):
         print('Connection established, waiting for request ...')
         if not self.wait_request():
             return False
-        print('Request for', 'TODO:self.num_segments', ' received')
+        print('Request for', 'self.num_segments', ' received')
         print('Sending data...')
         if not self.send_data():
             return False
@@ -68,40 +73,40 @@ class TCP_Connection(object):
 
     # function to establish connection, exit after entering ESTABLISHED state
     def wait_syn(self):
-        while(goon):
-            try:
-                data = receive_segment(10)
-                # data, adr = s.recvfrom(2048)
-                if not data:
-                    return False
-                packet = self.segment.unpack(data)
-
-                if(packet.syn and not packet.isACK):
-                    newpacket = self.segment.gen_packet(seqn=self.tx_next, ackn=packet.seq+1, syn=1, fin=0, ack=1, payload=packet.payload)
-                    send_segment(newpacket, self.segment.get_info(newpacket))
-                    return True
-
-                print(self.segment.get_info(data))
-
-                #s.sendto("syn-ack".encode("utf-8"), (dst_ip, dst_port))
+        data = receive_segment(10)
+        info = self.segment.get_info(data)
+        helper.print_info(info, 'IN:')
+        # syn
+        if(info == (0, 0, True, False, 0, False)):
+            packet = self.segment.unpack(data)
+            # build syn, ack
+            newpacket = self.segment.gen_packet(seqn=self.seq, ackn=1, syn=1,ack=1)
+            info = self.segment.get_info(newpacket)
+            helper.print_info(info, 'OUT:')
+            # send syn, ack
+            send_segment(newpacket, self.segment.get_info(newpacket))
+            data = receive_segment(10)
+            info = self.segment.get_info(data)
+            helper.print_info(info, 'IN:')
+            if(info == (1, 1, False, True, 0, False)):
                 return True
-            except socket.timeout:
-                pass
-
-
-        pass    # TODO: Schritt 1
+            return True
+        return False
 
     # receive and acknowledge a request
     def wait_request(self):
-
         data = receive_segment(3)
         packet = self.segment.unpack(data)
         info = self.segment.get_info(data)
-        #print_packet(data, ipo.id, self.segment.get_info(data))
+        helper.print_info(info, 'IN:')
 
-        if(info[2] and info[4] or True): # TODO or True
-            newpacket = self.segment.gen_packet(321, 1, 1, 0, 1, None)
-            send_segment(newpacket, self.segment.get_info(newpacket))
+        self.num_segments = struct.unpack("i",packet.payload)[0]
+        # payload
+        if(info[4]):
+            packet = self.segment.gen_packet(self.seq,ack=1,ackn=self.seq)
+            info = self.segment.get_info(packet)
+            helper.print_info(info, 'OUT:')
+            send_segment(packet, self.segment.get_info(packet))
             return True
         else:
             print('hmm')
@@ -109,16 +114,20 @@ class TCP_Connection(object):
 
     # send the data, main function
     def send_data(self):
-        newpacket = self.segment.gen_packet(321, 1, 1, 0, 1, None)
-        send_segment(newpacket, self.segment.get_info(newpacket))
+        payload = gen_data()
+        packet = self.segment.gen_packet(self.seq,ackn=self.ackn,payload=payload)
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'OUT:')
+        send_segment(packet, self.segment.get_info(packet))
 
         return True
 
 
     # function to execute closing procedure
     def close(self):
-        data = receive_segment(3)
-        packet = self.segment.unpack(data)
+        packet = receive_segment(3)
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'IN:')
         return True
 
     # generate a packet (header#payload),
@@ -137,6 +146,8 @@ class TCP_Connection(object):
         # packet to be sent
         packet = self.segment.gen_packet(seqn, ackn, syn, fin, ack, payload)
         # this function should be used to put them on the UDP socket
+        info = self.segment.get_info(packet)
+        helper.print_info(info, 'OUT:')
         send_segment(packet, self.segment.get_info(packet))
 
     # implement a function to trigger retransmits
@@ -173,7 +184,7 @@ def receive_segment(rto):
     # extract header fields from binary packet
     iph = ipo.unpack(packet)
 
-    helper.print_in_msg(packet, ipo.id, 'IN:')
+    #helper.print_in_msg(packet, ipo.id, 'IN:')
     if iph.dst != my_v_ip:
         print('Error: IP packet not addressed to me', iph.dst)
         return
@@ -190,7 +201,7 @@ def receive_segment(rto):
 def send_segment(packet, info):
     time.sleep(2)
     #print_packet('OUT:', ipo.id, info)
-    helper.print_in_msg(packet, ipo.id, 'OUT2:')
+    #helper.print_in_msg(packet, ipo.id, 'OUT2:')
     # create IP header
     iph = ipo.pack()
     # add IP header
@@ -219,6 +230,8 @@ def my_time():
 
 # the server, started as a thread
 
+def gen_data():
+    return os.urandom(1000)
 
 def my_file_server():
     global goon
